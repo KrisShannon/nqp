@@ -19,6 +19,9 @@ grammar NQP::Grammar is HLL::Grammar {
         # with this compilation unit.
         my $file := pir::find_caller_lex__ps('$?FILES');
         my $source_id := nqp::sha1(nqp::getattr(self, Regex::Cursor, '$!target'));
+        if %*COMPILING<%?OPTIONS><sc-prefix> {
+             $source_id := %*COMPILING<%?OPTIONS><sc-prefix> ~ '-' ~ $source_id;
+        }
         my $*W := pir::isnull($file) ??
             NQP::World.new(:handle($source_id)) !!
             NQP::World.new(:handle($source_id), :description($file));
