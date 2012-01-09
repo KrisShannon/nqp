@@ -507,11 +507,33 @@ knowhow NQPClassHOW {
             if pir::defined($found) {
                 return $!trace && !$no_trace && nqp::substr($name, 0, 1) ne '!' ??
                     -> *@pos, *%named { 
+                        my $result_info := Q:PIR {
+                            get_params "0x22, 0x222", $P201, $P202
+                            store_lex "@pos", $P201
+                            store_lex "%%named", $P202
+                            %r = result_info
+                        };
                         say(nqp::x('  ', $!trace_depth) ~ "Calling $name");
                         $!trace_depth := $!trace_depth + 1;
-                        my $result := $found(|@pos, |%named);
+                        Q:PIR {
+                            find_lex $P200, "$result_info"
+                            find_lex $P201, "@pos"
+                            find_lex $P202, "%%named"
+                            find_lex $P203, "$found"
+                            set_args "0x22, 0x222", $P201, $P202
+                            set_result_info $P200
+                            invokecc $P203
+                            get_results "0x22, 0x222", $P201, $P202
+                            store_lex "@pos", $P201
+                            store_lex "%%named", $P202
+                        };
                         $!trace_depth := $!trace_depth - 1;
-                        $result
+                        Q:PIR {
+                            find_lex $P201, "@pos"
+                            find_lex $P202, "%%named"
+                            set_returns "0x22, 0x222", $P201, $P202
+                            returncc
+                        }; 
                     } !!
                     $found;
             }
