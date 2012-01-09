@@ -222,7 +222,20 @@ class QRegex::NFA {
               !! self.addedge($substart, 0, $EDGE_FATE, $fate)
         }
         else {
-            self.addedge($start, 0, $EDGE_FATE, $fate);
+            my @methods := $cursor.HOW.methods($cursor);
+            my $proto := 0;
+            my $prefix      := $name ~ ':sym<';
+            my $prefixchars := nqp::chars($prefix);
+            for @methods -> $method {
+                my $methname := ~$method;
+                if nqp::substr($methname, 0, $prefixchars) eq $prefix {
+                    my $proto := 1;
+                    self.mergesubrule($start, $to, $fate, $cursor, $methname, %seen);
+                }
+            }
+            unless $proto {
+                self.addedge($start, 0, $EDGE_FATE, $fate);
+            }
         }
     }
 
