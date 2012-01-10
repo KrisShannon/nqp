@@ -32,7 +32,6 @@ class QAST::Compiler is HLL::Compiler {
         my $restartlabel := self.post_new('Label', :result($prefix ~ 'restart'));
         my $faillabel    := self.post_new('Label', :result($prefix ~ 'fail'));
         my $jumplabel    := self.post_new('Label', :result($prefix ~ 'jump'));
-        my $cutlabel     := self.post_new('Label', :result($prefix ~ 'cut'));
         %*REG<fail>      := $faillabel;
 
         # common prologue
@@ -45,7 +44,7 @@ class QAST::Compiler is HLL::Compiler {
         $ops.push($restartlabel);
         $ops.push($faillabel);
         $ops.push_pirop('unless', %*REG<bstack>, $donelabel);
-        $ops.push_pirop('pop', '$I19', %*REG<bstack>);
+        $ops.push_pirop('pop', '$I18', %*REG<bstack>);
         $ops.push_pirop('pop', %*REG<rep>, %*REG<bstack>);
         $ops.push_pirop('pop', %*REG<pos>, %*REG<bstack>);
         $ops.push_pirop('pop', '$I19', %*REG<bstack>);
@@ -54,11 +53,8 @@ class QAST::Compiler is HLL::Compiler {
         $ops.push_pirop('eq', '$I19', 0, $faillabel);
         # backtrack the cursor stack
         $ops.push_pirop('if_null', %*REG<cstack>, $jumplabel);
-        $ops.push_pirop('elements', '$I18', %*REG<bstack>);
-        $ops.push_pirop('le', '$I18', 0, $cutlabel);
-        $ops.push_pirop('dec', '$I18');
-        $ops.push_pirop('set', '$I18', %*REG<bstack>~'[$I18]');
-        $ops.push($cutlabel);
+        $ops.push_pirop('elements', '$I11', %*REG<cstack>);
+        $ops.push_pirop('le', '$I11', '$I18', $jumplabel);
         $ops.push_pirop('assign', %*REG<cstack>, '$I18');
         $ops.push($jumplabel);
         $ops.push_pirop('jump', '$I19');
